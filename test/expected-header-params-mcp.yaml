@@ -1,0 +1,58 @@
+server:
+  name: header-params-api
+tools:
+  - name: authenticate
+    description: Authenticate with API key
+    args:
+      - name: X-API-Key
+        description: API key for authentication
+        type: string
+        required: true
+        position: header
+      - name: X-Client-ID
+        description: Client identifier
+        type: string
+        position: header
+    requestTemplate:
+      url: /auth
+      method: GET
+    responseTemplate:
+      prependBody: |+
+        # API Response
+
+        Below is the response from the API. Field descriptions:
+
+        Content-Type: application/json
+
+        - **authenticated**: Authentication status (Type: boolean)
+        - **expires**: Token expiration time (Type: string)
+
+        Original response:
+
+  - name: getSecureResource
+    description: Get secure resource
+    args:
+      - name: Accept-Language
+        description: Preferred language for response
+        type: string
+        position: header
+      - name: Authorization
+        description: Bearer token for authentication
+        type: string
+        required: true
+        position: header
+    requestTemplate:
+      url: /secure-resource
+      method: GET
+    responseTemplate:
+      prependBody: |+
+        # API Response
+
+        Below is the response from the API. Field descriptions:
+
+        Content-Type: application/json
+
+        - **data**: Secure data (Type: string)
+
+        Original response:
+

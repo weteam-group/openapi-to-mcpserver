@@ -1,0 +1,73 @@
+server:
+  name: petstore
+tools:
+  - name: listPets
+    description: List all pets
+    args:
+      - name: limit
+        description: How many items to return at one time (max 100)
+        type: integer
+        position: query
+    requestTemplate:
+      url: /pets
+      method: GET
+    responseTemplate:
+      prependBody: |+
+        # API Response
+
+        Below is the response from the API. Field descriptions:
+
+        Content-Type: application/json
+
+        - **pets**:  (Type: array)
+          - **pets[].id**: Unique identifier for the pet (Type: integer)
+          - **pets[].name**: Name of the pet (Type: string)
+          - **pets[].tag**: Tag of the pet (Type: string)
+        - **nextPage**: URL to get the next page of pets (Type: string)
+
+        Original JSON response:
+
+  - name: createPets
+    description: Create a pet
+    args:
+      - name: name
+        description: Name of the pet
+        type: string
+        required: true
+        position: body
+      - name: tag
+        description: Tag of the pet
+        type: string
+        position: body
+    requestTemplate:
+      url: /pets
+      method: POST
+      headers:
+        - key: Content-Type
+          value: application/json
+    responseTemplate: {}
+  - name: showPetById
+    description: Info for a specific pet
+    args:
+      - name: petId
+        description: The id of the pet to retrieve
+        type: string
+        required: true
+        position: path
+    requestTemplate:
+      url: /pets/{petId}
+      method: GET
+    responseTemplate:
+      prependBody: |+
+        # API Response
+
+        Below is the response from the API. Field descriptions:
+
+        Content-Type: application/json
+
+        - **id**: Unique identifier for the pet (Type: integer)
+        - **name**: Name of the pet (Type: string)
+        - **tag**: Tag of the pet (Type: string)
+
+        Original JSON response:
+

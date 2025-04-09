@@ -1,0 +1,112 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "version": "1.0.0",
+    "title": "Cookie Parameters API",
+    "description": "A sample API that demonstrates cookie parameters"
+  },
+  "servers": [
+    {
+      "url": "http://api.example.com/v1"
+    }
+  ],
+  "paths": {
+    "/session": {
+      "get": {
+        "summary": "Get session information",
+        "operationId": "getSession",
+        "parameters": [
+          {
+            "name": "sessionId",
+            "in": "cookie",
+            "required": true,
+            "description": "Session identifier cookie",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Session information",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "userId": {
+                      "type": "string",
+                      "description": "User ID associated with the session"
+                    },
+                    "created": {
+                      "type": "string",
+                      "format": "date-time",
+                      "description": "Session creation time"
+                    },
+                    "expires": {
+                      "type": "string",
+                      "format": "date-time",
+                      "description": "Session expiration time"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/preferences": {
+      "get": {
+        "summary": "Get user preferences",
+        "operationId": "getPreferences",
+        "parameters": [
+          {
+            "name": "sessionId",
+            "in": "cookie",
+            "required": true,
+            "description": "Session identifier cookie",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "preferenceId",
+            "in": "query",
+            "required": false,
+            "description": "Specific preference ID to retrieve",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User preferences",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "theme": {
+                      "type": "string",
+                      "description": "UI theme preference"
+                    },
+                    "language": {
+                      "type": "string",
+                      "description": "Language preference"
+                    },
+                    "notifications": {
+                      "type": "boolean",
+                      "description": "Notification preference"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,51 @@
+server:
+  name: path-params-api
+tools:
+  - name: getUserById
+    description: Get user by ID
+    args:
+      - name: userId
+        description: The ID of the user to retrieve
+        type: string
+        required: true
+        position: path
+    requestTemplate:
+      url: /users/{userId}
+      method: GET
+    responseTemplate:
+      prependBody: |+
+        # API Response
+
+        Below is the response from the API. Field descriptions:
+
+        Content-Type: application/json
+
+        - **email**: User email (Type: string)
+        - **id**: User ID (Type: string)
+        - **name**: User name (Type: string)
+
+        Original response:
+
+  - name: updateUser
+    description: Update user
+    args:
+      - name: email
+        description: User email
+        type: string
+        position: body
+      - name: name
+        description: User name
+        type: string
+        position: body
+      - name: userId
+        description: The ID of the user to update
+        type: string
+        required: true
+        position: path
+    requestTemplate:
+      url: /users/{userId}
+      method: PUT
+      headers:
+        - key: Content-Type
+          value: application/json
+    responseTemplate: {}

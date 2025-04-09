@@ -1,0 +1,158 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "version": "1.0.0",
+    "title": "Request Body Types API",
+    "description": "A sample API that demonstrates different request body content types"
+  },
+  "servers": [
+    {
+      "url": "http://api.example.com/v1"
+    }
+  ],
+  "paths": {
+    "/json-data": {
+      "post": {
+        "summary": "Submit JSON data",
+        "operationId": "submitJsonData",
+        "requestBody": {
+          "description": "JSON data to submit",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["name"],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Name field"
+                  },
+                  "age": {
+                    "type": "integer",
+                    "description": "Age field"
+                  },
+                  "address": {
+                    "type": "object",
+                    "description": "Address information",
+                    "properties": {
+                      "street": {
+                        "type": "string",
+                        "description": "Street address"
+                      },
+                      "city": {
+                        "type": "string",
+                        "description": "City"
+                      },
+                      "zipCode": {
+                        "type": "string",
+                        "description": "ZIP code"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Data submitted successfully"
+          }
+        }
+      }
+    },
+    "/form-data": {
+      "post": {
+        "summary": "Submit form data",
+        "operationId": "submitFormData",
+        "requestBody": {
+          "description": "Form data to submit",
+          "required": true,
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "required": ["username"],
+                "properties": {
+                  "username": {
+                    "type": "string",
+                    "description": "Username"
+                  },
+                  "password": {
+                    "type": "string",
+                    "description": "Password",
+                    "format": "password"
+                  },
+                  "remember": {
+                    "type": "boolean",
+                    "description": "Remember login"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Form data submitted successfully"
+          }
+        }
+      }
+    },
+    "/multipart-data": {
+      "post": {
+        "summary": "Upload file with multipart data",
+        "operationId": "uploadFile",
+        "requestBody": {
+          "description": "File to upload",
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "File to upload"
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "File description"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "File uploaded successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "fileId": {
+                      "type": "string",
+                      "description": "ID of the uploaded file"
+                    },
+                    "fileName": {
+                      "type": "string",
+                      "description": "Name of the uploaded file"
+                    },
+                    "fileSize": {
+                      "type": "integer",
+                      "description": "Size of the uploaded file in bytes"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
