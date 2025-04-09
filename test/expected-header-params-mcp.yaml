@@ -14,20 +14,25 @@ tools:
         type: string
         position: header
     requestTemplate:
-      url: /auth
+      url: http://api.example.com/v1/auth
       method: GET
     responseTemplate:
       prependBody: |+
-        # API Response
+        # API Response Information
 
-        Below is the response from the API. Field descriptions:
+        Below is the response from an API call. To help you understand the data, I've provided:
 
-        Content-Type: application/json
+        1. A detailed description of all fields in the response structure
+        2. The complete API response
+
+        ## Response Structure
+
+        > Content-Type: application/json
 
         - **authenticated**: Authentication status (Type: boolean)
         - **expires**: Token expiration time (Type: string)
 
-        Original response:
+        ## Original Response
 
   - name: getSecureResource
     description: Get secure resource
@@ -42,17 +47,22 @@ tools:
         required: true
         position: header
     requestTemplate:
-      url: /secure-resource
+      url: http://api.example.com/v1/secure-resource
       method: GET
     responseTemplate:
       prependBody: |+
-        # API Response
+        # API Response Information
 
-        Below is the response from the API. Field descriptions:
+        Below is the response from an API call. To help you understand the data, I've provided:
 
-        Content-Type: application/json
+        1. A detailed description of all fields in the response structure
+        2. The complete API response
+
+        ## Response Structure
+
+        > Content-Type: application/json
 
         - **data**: Secure data (Type: string)
 
-        Original response:
+        ## Original Response
 

@@ -14,7 +14,7 @@ tools:
         type: string
         position: body
     requestTemplate:
-      url: /pets
+      url: http://petstore.swagger.io/v1/pets
       method: POST
       headers:
         - key: Content-Type
@@ -28,15 +28,20 @@ tools:
         type: integer
         position: query
     requestTemplate:
-      url: /pets
+      url: http://petstore.swagger.io/v1/pets
       method: GET
     responseTemplate:
       prependBody: |+
-        # API Response
+        # API Response Information
 
-        Below is the response from the API. Field descriptions:
+        Below is the response from an API call. To help you understand the data, I've provided:
 
-        Content-Type: application/json
+        1. A detailed description of all fields in the response structure
+        2. The complete API response
+
+        ## Response Structure
+
+        > Content-Type: application/json
 
         - **nextPage**: URL to get the next page of pets (Type: string)
         - **pets**:  (Type: array)
@@ -44,7 +49,7 @@ tools:
           - **pets[].name**: Name of the pet (Type: string)
           - **pets[].tag**: Tag of the pet (Type: string)
 
-        Original response:
+        ## Original Response
 
   - name: showPetById
     description: Info for a specific pet
@@ -55,19 +60,24 @@ tools:
         required: true
         position: path
     requestTemplate:
-      url: /pets/{petId}
+      url: http://petstore.swagger.io/v1/pets/{petId}
       method: GET
     responseTemplate:
       prependBody: |+
-        # API Response
+        # API Response Information
 
-        Below is the response from the API. Field descriptions:
+        Below is the response from an API call. To help you understand the data, I've provided:
 
-        Content-Type: application/json
+        1. A detailed description of all fields in the response structure
+        2. The complete API response
+
+        ## Response Structure
+
+        > Content-Type: application/json
 
         - **id**: Unique identifier for the pet (Type: integer)
         - **name**: Name of the pet (Type: string)
         - **tag**: Tag of the pet (Type: string)
 
-        Original response:
+        ## Original Response
 

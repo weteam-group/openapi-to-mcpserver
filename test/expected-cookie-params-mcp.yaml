@@ -14,21 +14,26 @@ tools:
         required: true
         position: cookie
     requestTemplate:
-      url: /preferences
+      url: http://api.example.com/v1/preferences
       method: GET
     responseTemplate:
       prependBody: |+
-        # API Response
+        # API Response Information
 
-        Below is the response from the API. Field descriptions:
+        Below is the response from an API call. To help you understand the data, I've provided:
 
-        Content-Type: application/json
+        1. A detailed description of all fields in the response structure
+        2. The complete API response
+
+        ## Response Structure
+
+        > Content-Type: application/json
 
         - **language**: Language preference (Type: string)
         - **notifications**: Notification preference (Type: boolean)
         - **theme**: UI theme preference (Type: string)
 
-        Original response:
+        ## Original Response
 
   - name: getSession
     description: Get session information
@@ -39,19 +44,24 @@ tools:
         required: true
         position: cookie
     requestTemplate:
-      url: /session
+      url: http://api.example.com/v1/session
       method: GET
     responseTemplate:
       prependBody: |+
-        # API Response
+        # API Response Information
 
-        Below is the response from the API. Field descriptions:
+        Below is the response from an API call. To help you understand the data, I've provided:
 
-        Content-Type: application/json
+        1. A detailed description of all fields in the response structure
+        2. The complete API response
+
+        ## Response Structure
+
+        > Content-Type: application/json
 
         - **created**: Session creation time (Type: string)
         - **expires**: Session expiration time (Type: string)
         - **userId**: User ID associated with the session (Type: string)
 
-        Original response:
+        ## Original Response
 

@@ -207,17 +207,22 @@ tools:
       method: GET
     responseTemplate:
       prependBody: |
-        # API Response
+        # API Response Information
 
-        Below is the response from the API. Field descriptions:
+        Below is the response from an API call. To help you understand the data, I've provided:
 
-        Content-Type: application/json
+        1. A detailed description of all fields in the response structure
+        2. The complete API response
+
+        ## Response Structure
+
+        > Content-Type: application/json
 
         - **id**: Unique identifier for the pet (Type: integer)
         - **name**: Name of the pet (Type: string)
         - **tag**: Tag of the pet (Type: string)
 
-        Original response:
+        ## Original Response
 
   - name: createPets
     description: Create a pet
@@ -251,11 +256,16 @@ tools:
       method: GET
     responseTemplate:
       prependBody: |
-        # API Response
+        # API Response Information
 
-        Below is the response from the API. Field descriptions:
+        Below is the response from an API call. To help you understand the data, I've provided:
 
-        Content-Type: application/json
+        1. A detailed description of all fields in the response structure
+        2. The complete API response
+
+        ## Response Structure
+
+        > Content-Type: application/json
 
         - **pets**:  (Type: array)
           - **pets[].id**: Unique identifier for the pet (Type: integer)
@@ -263,7 +273,7 @@ tools:
           - **pets[].tag**: Tag of the pet (Type: string)
         - **nextPage**: URL to get the next page of pets (Type: string)
 
-        Original response:
+        ## Original Response
 ```
 
 4. This configuration can be used with Higress by adding it to your Higress gateway configuration.
@@ -285,4 +295,4 @@ For more information about using this configuration with Higress REST-to-MCP, pl
 - Preserves parameter descriptions and types
 - Automatically sets parameter positions based on OpenAPI parameter locations
 - Handles path, query, header, cookie, and body parameters
-- Generates response templates with field descriptions
+- Generates response templates with field descriptions and improved formatting for LLM understanding

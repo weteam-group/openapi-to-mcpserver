@@ -10,21 +10,26 @@ tools:
         required: true
         position: path
     requestTemplate:
-      url: /users/{userId}
+      url: http://api.example.com/v1/users/{userId}
       method: GET
     responseTemplate:
       prependBody: |+
-        # API Response
+        # API Response Information
 
-        Below is the response from the API. Field descriptions:
+        Below is the response from an API call. To help you understand the data, I've provided:
 
-        Content-Type: application/json
+        1. A detailed description of all fields in the response structure
+        2. The complete API response
+
+        ## Response Structure
+
+        > Content-Type: application/json
 
         - **email**: User email (Type: string)
         - **id**: User ID (Type: string)
         - **name**: User name (Type: string)
 
-        Original response:
+        ## Original Response
 
   - name: updateUser
     description: Update user
@@ -43,7 +48,7 @@ tools:
         required: true
         position: path
     requestTemplate:
-      url: /users/{userId}
+      url: http://api.example.com/v1/users/{userId}
       method: PUT
       headers:
         - key: Content-Type

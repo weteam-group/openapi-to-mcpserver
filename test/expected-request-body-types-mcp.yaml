@@ -18,7 +18,7 @@ tools:
         required: true
         position: body
     requestTemplate:
-      url: /form-data
+      url: http://api.example.com/v1/form-data
       method: POST
       headers:
         - key: Content-Type
@@ -51,7 +51,7 @@ tools:
         required: true
         position: body
     requestTemplate:
-      url: /json-data
+      url: http://api.example.com/v1/json-data
       method: POST
       headers:
         - key: Content-Type
@@ -61,22 +61,27 @@ tools:
     description: Upload file with multipart data
     args: []
     requestTemplate:
-      url: /multipart-data
+      url: http://api.example.com/v1/multipart-data
       method: POST
       headers:
         - key: Content-Type
           value: multipart/form-data
     responseTemplate:
       prependBody: |+
-        # API Response
+        # API Response Information
 
-        Below is the response from the API. Field descriptions:
+        Below is the response from an API call. To help you understand the data, I've provided:
 
-        Content-Type: application/json
+        1. A detailed description of all fields in the response structure
+        2. The complete API response
+
+        ## Response Structure
+
+        > Content-Type: application/json
 
         - **fileId**: ID of the uploaded file (Type: string)
         - **fileName**: Name of the uploaded file (Type: string)
         - **fileSize**: Size of the uploaded file in bytes (Type: integer)
 
-        Original response:
+        ## Original Response
 
