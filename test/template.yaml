@@ -1,0 +1,11 @@
+server:
+  config:
+    apiKey: ""
+
+tools:
+  requestTemplate:
+    headers:
+      - key: Authorization
+        value: "APPCODE {{.config.apiKey}}"
+      - key: X-Ca-Nonce
+        value: "{{uuidv4}}"

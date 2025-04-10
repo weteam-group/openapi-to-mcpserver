@@ -2,12 +2,14 @@ package converter
 
 import (
 	"fmt"
+	"os"
 	"sort"
 	"strings"
 
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/higress-group/openapi-to-mcpserver/pkg/models"
 	"github.com/higress-group/openapi-to-mcpserver/pkg/parser"
+	"gopkg.in/yaml.v3"
 )
 
 // Converter represents an OpenAPI to MCP converter
@@ -59,12 +61,91 @@ func (c *Converter) Convert() (*models.MCPConfig, error) {
 		}
 	}
 
+	// Apply template if provided
+	if c.options.TemplatePath != "" {
+		err := c.applyTemplate(config)
+		if err != nil {
+			return nil, fmt.Errorf("failed to apply template: %w", err)
+		}
+	}
+
 	// Sort tools by name for consistent output
 	sort.Slice(config.Tools, func(i, j int) bool {
 		return config.Tools[i].Name < config.Tools[j].Name
 	})
 
 	return config, nil
+}
+
+// applyTemplate applies a template to the generated configuration
+func (c *Converter) applyTemplate(config *models.MCPConfig) error {
+	// Read the template file
+	templateData, err := os.ReadFile(c.options.TemplatePath)
+	if err != nil {
+		return fmt.Errorf("failed to read template file: %w", err)
+	}
+
+	// Parse the template
+	var templateConfig models.MCPConfigTemplate
+	err = yaml.Unmarshal(templateData, &templateConfig)
+	if err != nil {
+		return fmt.Errorf("failed to parse template: %w", err)
+	}
+
+	// Apply server config
+	if templateConfig.Server.Config != nil {
+		if config.Server.Config == nil {
+			config.Server.Config = make(map[string]interface{})
+		}
+		for k, v := range templateConfig.Server.Config {
+			config.Server.Config[k] = v
+		}
+	}
+
+	// Apply tool template to all tools
+	if templateConfig.Tools.RequestTemplate != nil || templateConfig.Tools.ResponseTemplate != nil {
+		for i := range config.Tools {
+			// Apply request template
+			if templateConfig.Tools.RequestTemplate != nil {
+				// Merge headers
+				if len(templateConfig.Tools.RequestTemplate.Headers) > 0 {
+					config.Tools[i].RequestTemplate.Headers = append(
+						config.Tools[i].RequestTemplate.Headers,
+						templateConfig.Tools.RequestTemplate.Headers...,
+					)
+				}
+
+				// Apply other request template fields
+				if templateConfig.Tools.RequestTemplate.Body != "" {
+					config.Tools[i].RequestTemplate.Body = templateConfig.Tools.RequestTemplate.Body
+				}
+				if templateConfig.Tools.RequestTemplate.ArgsToJsonBody {
+					config.Tools[i].RequestTemplate.ArgsToJsonBody = true
+				}
+				if templateConfig.Tools.RequestTemplate.ArgsToUrlParam {
+					config.Tools[i].RequestTemplate.ArgsToUrlParam = true
+				}
+				if templateConfig.Tools.RequestTemplate.ArgsToFormBody {
+					config.Tools[i].RequestTemplate.ArgsToFormBody = true
+				}
+			}
+
+			// Apply response template
+			if templateConfig.Tools.ResponseTemplate != nil {
+				if templateConfig.Tools.ResponseTemplate.Body != "" {
+					config.Tools[i].ResponseTemplate.Body = templateConfig.Tools.ResponseTemplate.Body
+				}
+				if templateConfig.Tools.ResponseTemplate.PrependBody != "" {
+					config.Tools[i].ResponseTemplate.PrependBody = templateConfig.Tools.ResponseTemplate.PrependBody
+				}
+				if templateConfig.Tools.ResponseTemplate.AppendBody != "" {
+					config.Tools[i].ResponseTemplate.AppendBody = templateConfig.Tools.ResponseTemplate.AppendBody
+				}
+			}
+		}
+	}
+
+	return nil
 }
 
 // getOperations returns a map of HTTP method to operation

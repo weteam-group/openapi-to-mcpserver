@@ -19,6 +19,7 @@ func TestEndToEndConversion(t *testing.T) {
 		inputFile      string
 		expectedOutput string
 		serverName     string
+		templatePath   string
 	}{
 		{
 			name:           "Petstore API",
@@ -50,6 +51,13 @@ func TestEndToEndConversion(t *testing.T) {
 			expectedOutput: "../../test/expected-request-body-types-mcp.yaml",
 			serverName:     "request-body-types-api",
 		},
+		{
+			name:           "Petstore API with Template",
+			inputFile:      "../../test/petstore.json",
+			expectedOutput: "../../test/expected-petstore-template-mcp.yaml",
+			serverName:     "petstore",
+			templatePath:   "../../test/template.yaml",
+		},
 	}
 
 	for _, tc := range testCases {
@@ -63,7 +71,8 @@ func TestEndToEndConversion(t *testing.T) {
 
 			// Create a new converter
 			c := NewConverter(p, models.ConvertOptions{
-				ServerName: tc.serverName,
+				ServerName:   tc.serverName,
+				TemplatePath: tc.templatePath,
 			})
 
 			// Convert the OpenAPI specification to an MCP configuration

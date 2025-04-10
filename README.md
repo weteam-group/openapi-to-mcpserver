@@ -22,6 +22,7 @@ openapi-to-mcp --input path/to/openapi.json --output path/to/mcp-config.yaml
 - `--tool-prefix`: Prefix for tool names (default: "")
 - `--format`: Output format (yaml or json) (default: "yaml")
 - `--validate`: Validate the OpenAPI specification (default: false)
+- `--template`: Path to a template file to patch the output (default: "")
 
 ## Example
 
@@ -298,3 +299,37 @@ For more information about using this configuration with Higress REST-to-MCP, pl
 - Handles path, query, header, cookie, and body parameters
 - Generates response templates with field descriptions and improved formatting for LLM understanding
 - Optional validation of OpenAPI specifications (disabled by default)
+- Supports template-based patching of the generated configuration
+
+## Template-Based Patching
+
+You can use the `--template` flag to provide a YAML file that will be used to patch the generated configuration. This is useful for adding common headers, authentication, or other customizations to all tools in the configuration.
+
+Example template file:
+
+```yaml
+server:
+  config:
+    apiKey: ""
+
+tools:
+  requestTemplate:
+    headers:
+      - key: Authorization
+        value: "APPCODE {{.config.apiKey}}"
+      - key: X-Ca-Nonce
+        value: "{{uuidv4}}"
+```
+
+When applied, this template will:
+
+1. Add an `apiKey` field to the server config
+2. Add the specified headers to all tools in the configuration
+
+Usage:
+
+```bash
+openapi-to-mcp --input api-spec.json --output mcp-config.yaml --server-name my-api --template template.yaml
+```
+
+The template values like `{{.config.apiKey}}` or `"{{uuidv4}}"` are not processed by the tool but are preserved in the output for use by the MCP server at runtime.

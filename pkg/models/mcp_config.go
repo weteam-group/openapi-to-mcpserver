@@ -64,4 +64,17 @@ type ConvertOptions struct {
 	ServerName     string
 	ServerConfig   map[string]interface{}
 	ToolNamePrefix string
+	TemplatePath   string
+}
+
+// ToolTemplate represents a template for applying to all tools
+type ToolTemplate struct {
+	RequestTemplate  *RequestTemplate  `yaml:"requestTemplate,omitempty"`
+	ResponseTemplate *ResponseTemplate `yaml:"responseTemplate,omitempty"`
+}
+
+// MCPConfigTemplate represents a template for patching the generated config
+type MCPConfigTemplate struct {
+	Server ServerConfig `yaml:"server"`
+	Tools  ToolTemplate `yaml:"tools,omitempty"`
 }

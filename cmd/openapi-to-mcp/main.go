@@ -22,6 +22,7 @@ func main() {
 	toolNamePrefix := flag.String("tool-prefix", "", "Prefix for tool names")
 	format := flag.String("format", "yaml", "Output format (yaml or json)")
 	validate := flag.Bool("validate", false, "Validate the OpenAPI specification")
+	templateFile := flag.String("template", "", "Path to a template file to patch the output")
 
 	// Parse command-line flags
 	flag.Parse()
@@ -56,6 +57,7 @@ func main() {
 	c := converter.NewConverter(p, models.ConvertOptions{
 		ServerName:     *serverName,
 		ToolNamePrefix: *toolNamePrefix,
+		TemplatePath:   *templateFile,
 	})
 
 	// Convert the OpenAPI specification to an MCP configuration
