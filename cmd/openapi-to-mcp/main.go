@@ -21,6 +21,7 @@ func main() {
 	serverName := flag.String("server-name", "openapi-server", "Name of the MCP server")
 	toolNamePrefix := flag.String("tool-prefix", "", "Prefix for tool names")
 	format := flag.String("format", "yaml", "Output format (yaml or json)")
+	validate := flag.Bool("validate", false, "Validate the OpenAPI specification")
 
 	// Parse command-line flags
 	flag.Parse()
@@ -40,6 +41,9 @@ func main() {
 
 	// Create a new parser
 	p := parser.NewParser()
+
+	// Set validation option
+	p.SetValidation(*validate)
 
 	// Parse the OpenAPI specification
 	err := p.ParseFile(*inputFile)

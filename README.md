@@ -21,6 +21,7 @@ openapi-to-mcp --input path/to/openapi.json --output path/to/mcp-config.yaml
 - `--server-name`: Name of the MCP server (default: "openapi-server")
 - `--tool-prefix`: Prefix for tool names (default: "")
 - `--format`: Output format (yaml or json) (default: "yaml")
+- `--validate`: Validate the OpenAPI specification (default: false)
 
 ## Example
 
@@ -296,3 +297,4 @@ For more information about using this configuration with Higress REST-to-MCP, pl
 - Automatically sets parameter positions based on OpenAPI parameter locations
 - Handles path, query, header, cookie, and body parameters
 - Generates response templates with field descriptions and improved formatting for LLM understanding
+- Optional validation of OpenAPI specifications (disabled by default)

@@ -12,12 +12,20 @@ import (
 
 // Parser represents an OpenAPI parser
 type Parser struct {
-	doc *openapi3.T
+	doc              *openapi3.T
+	ValidateDocument bool
 }
 
 // NewParser creates a new OpenAPI parser
 func NewParser() *Parser {
-	return &Parser{}
+	return &Parser{
+		ValidateDocument: false, // Default to no validation
+	}
+}
+
+// SetValidation sets whether to validate the OpenAPI document
+func (p *Parser) SetValidation(validate bool) {
+	p.ValidateDocument = validate
 }
 
 // ParseFile parses an OpenAPI document from a file
@@ -45,10 +53,12 @@ func (p *Parser) Parse(data []byte) error {
 		return fmt.Errorf("failed to parse OpenAPI document: %w", err)
 	}
 
-	// Validate the document
-	err = doc.Validate(context.Background())
-	if err != nil {
-		return fmt.Errorf("invalid OpenAPI document: %w", err)
+	// Validate the document if validation is enabled
+	if p.ValidateDocument {
+		err = doc.Validate(context.Background())
+		if err != nil {
+			return fmt.Errorf("invalid OpenAPI document: %w", err)
+		}
 	}
 
 	p.doc = doc
