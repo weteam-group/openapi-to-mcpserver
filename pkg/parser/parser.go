@@ -107,13 +107,8 @@ func (p *Parser) GetOperationID(path string, method string, operation *openapi3.
 	}
 
 	// Generate an operation ID based on the path and method
-	pathParts := strings.Split(strings.Trim(path, "/"), "/")
-	var pathName string
-	if len(pathParts) > 0 {
-		pathName = pathParts[len(pathParts)-1]
-	} else {
-		pathName = "root"
-	}
-
-	return fmt.Sprintf("%s_%s", strings.ToLower(method), pathName)
+	pathName := strings.ReplaceAll(path, "/", "_")
+	pathName = strings.ReplaceAll(path, "{", "")
+	pathName = strings.ReplaceAll(pathName, "}", "")
+	return fmt.Sprintf("%s%s", strings.ToLower(method), pathName)
 }
