@@ -11,7 +11,7 @@ go install github.com/higress-group/openapi-to-mcpserver/cmd/openapi-to-mcp@late
 ## Usage
 
 ```bash
-openapi-to-mcp --input path/to/openapi.json --output path/to/mcp-config.yaml
+openapi-to-mcp --input path/to/openapi.json --output path/to/mcp-server.yaml
 ```
 
 ### Options
@@ -329,7 +329,7 @@ When applied, this template will:
 Usage:
 
 ```bash
-openapi-to-mcp --input api-spec.json --output mcp-config.yaml --server-name my-api --template template.yaml
+openapi-to-mcp --input api-spec.json --output mcp-server.yaml --server-name my-server --template template.yaml
 ```
 
 The template values like `{{.config.apiKey}}` or `"{{uuidv4}}"` are not processed by the tool but are preserved in the output for use by the MCP server at runtime.
