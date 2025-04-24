@@ -1,0 +1,265 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "OpenAPI to MCP Server",
+    "description": "一个将 OpenAPI 规范的文档转换为 MCP（Model Context Protocol）服务器配置的 Web 服务",
+    "version": "1.0.0",
+    "contact": {
+      "name": "WeTeam Group",
+      "url": "https://github.com/weteam-group"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8080",
+      "description": "本地开发服务器"
+    }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "summary": "健康检查",
+        "description": "检查服务是否正常运行",
+        "operationId": "checkHealth",
+        "responses": {
+          "200": {
+            "description": "服务正常运行",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "ok"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/openapi-to-mcp": {
+      "post": {
+        "summary": "OpenAPI 转换",
+        "description": "将 OpenAPI 规范转换为 MCP 服务器配置",
+        "operationId": "convertOpenAPI",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["openapi_spec", "format"],
+                "properties": {
+                  "openapi_spec": {
+                    "type": "string",
+                    "description": "OpenAPI 规范内容（YAML 或 JSON 格式）"
+                  },
+                  "options": {
+                    "type": "object",
+                    "properties": {
+                      "server_name": {
+                        "type": "string",
+                        "description": "服务器名称",
+                        "default": "openapi-server"
+                      },
+                      "tool_name_prefix": {
+                        "type": "string",
+                        "description": "工具名前缀",
+                        "default": ""
+                      },
+                      "server_config": {
+                        "type": "object",
+                        "description": "服务器配置",
+                        "properties": {
+                          "host": {
+                            "type": "string",
+                            "description": "服务器主机地址",
+                            "default": "localhost"
+                          },
+                          "port": {
+                            "type": "integer",
+                            "description": "服务器端口号",
+                            "default": 8080
+                          },
+                          "base_path": {
+                            "type": "string",
+                            "description": "API 基础路径",
+                            "default": "/"
+                          },
+                          "schemes": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "enum": ["http", "https"]
+                            },
+                            "description": "支持的协议"
+                          },
+                          "timeout": {
+                            "type": "integer",
+                            "description": "请求超时时间（秒）",
+                            "default": 30
+                          },
+                          "max_connections": {
+                            "type": "integer",
+                            "description": "最大连接数",
+                            "default": 100
+                          },
+                          "cors": {
+                            "type": "object",
+                            "properties": {
+                              "enabled": {
+                                "type": "boolean",
+                                "description": "是否启用 CORS",
+                                "default": false
+                              },
+                              "allowed_origins": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                },
+                                "description": "允许的源"
+                              },
+                              "allowed_methods": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string",
+                                  "enum": ["GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH"]
+                                },
+                                "description": "允许的方法"
+                              },
+                              "allowed_headers": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                },
+                                "description": "允许的请求头"
+                              }
+                            }
+                          },
+                          "auth": {
+                            "type": "object",
+                            "properties": {
+                              "type": {
+                                "type": "string",
+                                "enum": ["none", "basic", "jwt"],
+                                "description": "认证类型",
+                                "default": "none"
+                              },
+                              "config": {
+                                "type": "object",
+                                "description": "认证配置"
+                              }
+                            }
+                          },
+                          "logging": {
+                            "type": "object",
+                            "properties": {
+                              "level": {
+                                "type": "string",
+                                "enum": ["debug", "info", "warn", "error"],
+                                "description": "日志级别",
+                                "default": "info"
+                              },
+                              "format": {
+                                "type": "string",
+                                "enum": ["text", "json"],
+                                "description": "日志格式",
+                                "default": "text"
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "template": {
+                        "type": "string",
+                        "description": "模板文件路径"
+                      },
+                      "validate": {
+                        "type": "boolean",
+                        "description": "是否验证 OpenAPI 规范",
+                        "default": false
+                      }
+                    }
+                  },
+                  "format": {
+                    "type": "string",
+                    "enum": ["yaml", "json"],
+                    "description": "输出格式"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "转换成功",
+            "content": {
+              "application/yaml": {
+                "schema": {
+                  "type": "string",
+                  "description": "YAML 格式的 MCP 配置"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "JSON 格式的 MCP 配置"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "错误信息"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "错误信息"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Error": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "description": "错误信息"
+          }
+        }
+      }
+    }
+  }
+} 
