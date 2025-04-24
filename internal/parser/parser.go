@@ -1,10 +1,10 @@
 package parser
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"os"
-	"strings"
 
 	"github.com/getkin/kin-openapi/openapi3"
 	"gopkg.in/yaml.v3"
@@ -58,7 +58,8 @@ func (p *Parser) ParseContent(content []byte) error {
 
 	// Validate the document if requested
 	if p.validate {
-		if err := doc.Validate(nil); err != nil {
+		ctx := context.Background()
+		if err := doc.Validate(ctx); err != nil {
 			return fmt.Errorf("OpenAPI specification validation failed: %w", err)
 		}
 	}

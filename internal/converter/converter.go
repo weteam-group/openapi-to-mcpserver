@@ -7,8 +7,8 @@ import (
 	"strings"
 
 	"github.com/getkin/kin-openapi/openapi3"
-	"github.com/higress-group/openapi-to-mcpserver/pkg/models"
-	"github.com/higress-group/openapi-to-mcpserver/pkg/parser"
+	"github.com/higress-group/openapi-to-mcpserver/internal/models"
+	"github.com/higress-group/openapi-to-mcpserver/internal/parser"
 	"gopkg.in/yaml.v3"
 )
 
