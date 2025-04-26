@@ -61,20 +61,8 @@ type ResponseTemplate struct {
 
 // ConvertOptions represents options for the conversion process
 type ConvertOptions struct {
-	ServerName     string
-	ServerConfig   map[string]interface{}
-	ToolNamePrefix string
-	TemplatePath   string
-}
-
-// ToolTemplate represents a template for applying to all tools
-type ToolTemplate struct {
-	RequestTemplate  *RequestTemplate  `yaml:"requestTemplate,omitempty"`
-	ResponseTemplate *ResponseTemplate `yaml:"responseTemplate,omitempty"`
-}
-
-// MCPConfigTemplate represents a template for patching the generated config
-type MCPConfigTemplate struct {
-	Server ServerConfig `yaml:"server"`
-	Tools  ToolTemplate `yaml:"tools,omitempty"`
+	ServerName       string
+	ServerConfig     map[string]interface{}
+	ToolNamePrefix   string
+	ResponseTemplate string // Markdown格式的响应描述模板（仅影响API响应的描述部分）
 }

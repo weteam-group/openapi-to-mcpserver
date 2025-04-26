@@ -1,335 +1,185 @@
 # OpenAPI to MCP Server
 
-A tool to convert OpenAPI specifications to MCP (Model Context Protocol) server configurations.
+一个将 OpenAPI 规范的文档转换为 MCP（Model Context Protocol）服务器配置的 Web 服务。
 
-## Installation
-
-```bash
-go install github.com/higress-group/openapi-to-mcpserver/cmd/openapi-to-mcp@latest
-```
-
-## Usage
+## 获取源码
 
 ```bash
-openapi-to-mcp --input path/to/openapi.json --output path/to/mcp-server.yaml
+git clone https://github.com/higress-group/openapi-to-mcpserver.git
+cd openapi-to-mcpserver
 ```
 
-### Options
+## 配置文件
 
-- `--input`: Path to the OpenAPI specification file (JSON or YAML) (required)
-- `--output`: Path to the output MCP configuration file (YAML) (required)
-- `--server-name`: Name of the MCP server (default: "openapi-server")
-- `--tool-prefix`: Prefix for tool names (default: "")
-- `--format`: Output format (yaml or json) (default: "yaml")
-- `--validate`: Validate the OpenAPI specification (default: false)
-- `--template`: Path to a template file to patch the output (default: "")
+项目使用以下配置文件：
 
-## Example
+- `conf/response_template.md`: 默认的API响应描述模板。可以自定义此文件来修改生成的响应结构说明。
+
+## 安装与运行
+
+### 使用 Docker 运行（推荐）
+
+**下载源码**
+```bash
+git clone https://github.com/higress-group/openapi-to-mcpserver.git
+cd openapi-to-mcpserver
+```
+
+**Docker 镜像构建**
+```bash
+# 使用脚本构建
+./build-docker.sh
+
+# 或者手动构建
+docker build -t openapi-to-mcpserver:latest .
+```
+
+**Docker Compose 运行**
 
 ```bash
-openapi-to-mcp --input petstore.json --output petstore-mcp.yaml --server-name petstore
+docker-compose up -d
 ```
 
-### Converting OpenAPI to Higress REST-to-MCP Configuration
+### 健康检查
 
-This tool can be used to convert an OpenAPI specification to a Higress REST-to-MCP configuration. Here's a complete example:
+```
+GET /health
+```
 
-1. Start with an OpenAPI specification (petstore.json):
+响应：
+```json
+{
+  "status": "ok"
+}
+```
+
+### OpenAPI 转换 MCP Yaml
+
+```
+POST /openapi-to-mcp
+```
+
+请求体：
+```json
+{
+  "openapi_spec": "OpenAPI 3.0 规范内容（YAML 或 JSON 格式，必填）",
+  "options": {
+    "server_name": "服务器名称（默认：openapi-server）",
+    "tool_name_prefix": "工具名前缀（默认：空字符串）",
+    "server_config": {},  // 可选，服务器配置
+    "response_template": "Markdown格式的响应描述模板（默认：空字符串）",
+    "validate": "是否验证 OpenAPI 规范（默认：false）"
+  },
+  "format": "yaml"  // 或 "json"，必填
+}
+```
+
+### 服务器配置（可选）
+
+`server_config` 是一个可选的配置项，用于自定义服务器的行为。如果未提供，将使用默认配置。
+
+可用的配置项：
 
 ```json
 {
-  "openapi": "3.0.0",
-  "info": {
-    "version": "1.0.0",
-    "title": "Swagger Petstore",
-    "description": "A sample API that uses a petstore as an example to demonstrate features in the OpenAPI 3.0 specification"
+  "host": "服务器主机地址（默认：localhost）",
+  "port": "服务器端口号（默认：8080）",
+  "base_path": "API 基础路径（默认：/）",
+  "schemes": ["http", "https"],  // 支持的协议
+  "timeout": "请求超时时间（单位：秒，默认：30）",
+  "max_connections": "最大连接数（默认：100）",
+  "cors": {
+    "enabled": "是否启用 CORS（默认：false）",
+    "allowed_origins": ["*"],  // 允许的源
+    "allowed_methods": ["GET", "POST", "PUT", "DELETE"],  // 允许的方法
+    "allowed_headers": ["Content-Type", "Authorization"]  // 允许的请求头
   },
-  "servers": [
-    {
-      "url": "http://petstore.swagger.io/v1"
-    }
-  ],
-  "paths": {
-    "/pets": {
-      "get": {
-        "summary": "List all pets",
-        "operationId": "listPets",
-        "parameters": [
-          {
-            "name": "limit",
-            "in": "query",
-            "description": "How many items to return at one time (max 100)",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "A paged array of pets",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "pets": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "id": {
-                            "type": "integer",
-                            "description": "Unique identifier for the pet"
-                          },
-                          "name": {
-                            "type": "string",
-                            "description": "Name of the pet"
-                          },
-                          "tag": {
-                            "type": "string",
-                            "description": "Tag of the pet"
-                          }
-                        }
-                      }
-                    },
-                    "nextPage": {
-                      "type": "string",
-                      "description": "URL to get the next page of pets"
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      },
-      "post": {
-        "summary": "Create a pet",
-        "operationId": "createPets",
-        "requestBody": {
-          "description": "Pet to add to the store",
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "required": ["name"],
-                "properties": {
-                  "name": {
-                    "type": "string",
-                    "description": "Name of the pet"
-                  },
-                  "tag": {
-                    "type": "string",
-                    "description": "Tag of the pet"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Null response"
-          }
-        }
-      }
-    },
-    "/pets/{petId}": {
-      "get": {
-        "summary": "Info for a specific pet",
-        "operationId": "showPetById",
-        "parameters": [
-          {
-            "name": "petId",
-            "in": "path",
-            "required": true,
-            "description": "The id of the pet to retrieve",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Expected response to a valid request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "id": {
-                      "type": "integer",
-                      "description": "Unique identifier for the pet"
-                    },
-                    "name": {
-                      "type": "string",
-                      "description": "Name of the pet"
-                    },
-                    "tag": {
-                      "type": "string",
-                      "description": "Tag of the pet"
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
+  "auth": {
+    "type": "认证类型（none/basic/jwt，默认：none）",
+    "config": {}  // 认证配置，根据认证类型不同而不同
+  },
+  "logging": {
+    "level": "日志级别（debug/info/warn/error，默认：info）",
+    "format": "日志格式（text/json，默认：text）"
   }
 }
 ```
 
-2. Convert it to a Higress REST-to-MCP configuration:
+响应：
+- 成功：返回转换后的 MCP 配置（YAML 或 JSON 格式）
+- 失败：返回错误信息
+
+## 示例
+
+使用 curl 调用 API：
 
 ```bash
-openapi-to-mcp --input petstore.json --output petstore-mcp.yaml --server-name petstore
+curl -X POST http://localhost:8080/openapi-to-mcp \
+  -H "Content-Type: application/json" \
+  -d '{
+    "openapi_spec": "您的 OpenAPI 3.0 规范的内容",
+    "options": {
+      "server_name": "mcp-server-0",
+      "tool_name_prefix": "mcp-",
+      "validate": true,
+      "response_template": "# 自定义API响应\n\n以下是API调用的返回结果解析："
+    },
+    "format": "yaml"
+  }'
 ```
 
-3. The resulting petstore-mcp.yaml file:
+## 错误处理
 
-```yaml
-server:
-  name: petstore
-tools:
-  - name: showPetById
-    description: Info for a specific pet
-    args:
-      - name: petId
-        description: The id of the pet to retrieve
-        type: string
-        required: true
-        position: path
-    requestTemplate:
-      url: /pets/{petId}
-      method: GET
-    responseTemplate:
-      prependBody: |
-        # API Response Information
+API 可能返回以下错误：
 
-        Below is the response from an API call. To help you understand the data, I've provided:
+| 状态码 | 错误原因 | 描述 |
+|-------|---------|------|
+| 400 | 请求体格式错误 | 请求体不是有效的 JSON 格式 |
+| 400 | `openapi_spec` 缺失或为空 | 必须提供有效的 OpenAPI 规范内容 |
+| 400 | `format` 参数错误 | 格式必须为 'yaml' 或 'json' |
+| 400 | 解析 OpenAPI 规范失败 | 提供的 OpenAPI 内容不是有效的 YAML 或 JSON 格式 |
+| 400 | OpenAPI 规范验证失败 | 当 `validate: true` 时，规范内容不符合 OpenAPI-3.0 标准 |
+| 500 | 转换失败 | 服务器内部错误，转换过程中出现问题 |
 
-        1. A detailed description of all fields in the response structure
-        2. The complete API response
+## 常见问题
 
-        ## Response Structure
+**Q: 为什么收到 "OpenAPI 规范格式错误" 的提示？**
 
-        > Content-Type: application/json
+A: 请确保提供的 `openapi_spec` 内容是有效的 YAML 或 JSON 格式。检查是否存在语法错误，如缺少闭合引号、缩进不正确等。
 
-        - **id**: Unique identifier for the pet (Type: integer)
-        - **name**: Name of the pet (Type: string)
-        - **tag**: Tag of the pet (Type: string)
+**Q: 为什么收到 "OpenAPI 规范验证失败" 的提示？**
 
-        ## Original Response
+A: 当设置 `validate: true` 时，系统会验证您的规范是否符合 OpenAPI 3.0 标准。请确保您的 OpenAPI 文档完全符合规范，包括必要的字段和正确的结构。
 
-  - name: createPets
-    description: Create a pet
-    args:
-      - name: name
-        description: Name of the pet
-        type: string
-        required: true
-        position: body
-      - name: tag
-        description: Tag of the pet
-        type: string
-        position: body
-    requestTemplate:
-      url: /pets
-      method: POST
-      headers:
-        - key: Content-Type
-          value: application/json
-    responseTemplate: {}
+**Q: 是否支持 OpenAPI 3.1 或 Swagger 2.0？**
 
-  - name: listPets
-    description: List all pets
-    args:
-      - name: limit
-        description: How many items to return at one time (max 100)
-        type: integer
-        position: query
-    requestTemplate:
-      url: /pets
-      method: GET
-    responseTemplate:
-      prependBody: |
-        # API Response Information
+A: 目前系统主要支持 OpenAPI 3.0 规范。对于 Swagger 2.0 或其他版本的文档，建议先使用转换工具将其转换为 OpenAPI 3.0 格式。
 
-        Below is the response from an API call. To help you understand the data, I've provided:
+**Q: 如何处理复杂的 OpenAPI 规范？**
 
-        1. A detailed description of all fields in the response structure
-        2. The complete API response
+A: 对于复杂的 OpenAPI 规范，建议：
+1. 首先设置 `validate: false` 进行基本转换
+2. 如遇问题，检查规范格式是否符合标准
+3. 对于大型规范，可以分段处理，或者使用工具预处理简化结构
 
-        ## Response Structure
+## 开发
 
-        > Content-Type: application/json
+### 项目结构
 
-        - **pets**:  (Type: array)
-          - **pets[].id**: Unique identifier for the pet (Type: integer)
-          - **pets[].name**: Name of the pet (Type: string)
-          - **pets[].tag**: Tag of the pet (Type: string)
-        - **nextPage**: URL to get the next page of pets (Type: string)
-
-        ## Original Response
 ```
-
-4. This configuration can be used with Higress by adding it to your Higress gateway configuration.
-
-Note how the tool automatically sets the `position` field for each parameter based on its location in the OpenAPI specification:
-- The `petId` parameter is set to `position: path` because it's defined as `in: path` in the OpenAPI spec
-- The `limit` parameter is set to `position: query` because it's defined as `in: query` in the OpenAPI spec
-- The request body properties (`name` and `tag`) are set to `position: body`
-
-The MCP server will automatically handle these parameters in the correct location when making API requests.
-
-For more information about using this configuration with Higress REST-to-MCP, please refer to the [Higress REST-to-MCP documentation](https://higress.cn/en/ai/mcp-quick-start/#configuring-rest-api-mcp-server).
-
-## Features
-
-- Converts OpenAPI paths to MCP tools
-- Supports both JSON and YAML OpenAPI specifications
-- Generates MCP configuration with server and tool definitions
-- Preserves parameter descriptions and types
-- Automatically sets parameter positions based on OpenAPI parameter locations
-- Handles path, query, header, cookie, and body parameters
-- Generates response templates with field descriptions and improved formatting for LLM understanding
-- Optional validation of OpenAPI specifications (disabled by default)
-- Supports template-based patching of the generated configuration
-
-## Template-Based Patching
-
-You can use the `--template` flag to provide a YAML file that will be used to patch the generated configuration. This is useful for adding common headers, authentication, or other customizations to all tools in the configuration.
-
-Example template file:
-
-```yaml
-server:
-  config:
-    apiKey: ""
-
-tools:
-  requestTemplate:
-    headers:
-      - key: Authorization
-        value: "APPCODE {{.config.apiKey}}"
-      - key: X-Ca-Nonce
-        value: "{{uuidv4}}"
+.
+├── api
+│   ├── handlers      # HTTP 请求处理器
+│   ├── routes        # 路由配置
+│   └── main.go       # 服务入口
+├── internal
+│   ├── converter     # OpenAPI 到 MCP 的转换逻辑
+│   ├── models        # 数据模型定义
+│   └── parser        # OpenAPI 解析器
+├── conf
+│   └── response_template.md  # 默认响应模板
+├── test              # 测试用例和示例文件
+├── Dockerfile        # Docker 镜像构建文件
+├── build-docker.sh   # Docker 镜像构建脚本
+└── docker-compose.yaml  # Docker Compose 部署配置
 ```
-
-When applied, this template will:
-
-1. Add an `apiKey` field to the server config
-2. Add the specified headers to all tools in the configuration
-
-Usage:
-
-```bash
-openapi-to-mcp --input api-spec.json --output mcp-server.yaml --server-name my-server --template template.yaml
-```
-
-The template values like `{{.config.apiKey}}` or `"{{uuidv4}}"` are not processed by the tool but are preserved in the output for use by the MCP server at runtime.

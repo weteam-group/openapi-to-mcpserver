@@ -3,14 +3,17 @@ package converter
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"sort"
 	"strings"
 
 	"github.com/getkin/kin-openapi/openapi3"
-	"github.com/higress-group/openapi-to-mcpserver/pkg/models"
-	"github.com/higress-group/openapi-to-mcpserver/pkg/parser"
-	"gopkg.in/yaml.v3"
+	"github.com/higress-group/openapi-to-mcpserver/internal/models"
+	"github.com/higress-group/openapi-to-mcpserver/internal/parser"
 )
+
+// defaultResponseTemplatePath 是默认响应模板的路径
+const defaultResponseTemplatePath = "conf/response_template.md"
 
 // Converter represents an OpenAPI to MCP converter
 type Converter struct {
@@ -61,91 +64,12 @@ func (c *Converter) Convert() (*models.MCPConfig, error) {
 		}
 	}
 
-	// Apply template if provided
-	if c.options.TemplatePath != "" {
-		err := c.applyTemplate(config)
-		if err != nil {
-			return nil, fmt.Errorf("failed to apply template: %w", err)
-		}
-	}
-
 	// Sort tools by name for consistent output
 	sort.Slice(config.Tools, func(i, j int) bool {
 		return config.Tools[i].Name < config.Tools[j].Name
 	})
 
 	return config, nil
-}
-
-// applyTemplate applies a template to the generated configuration
-func (c *Converter) applyTemplate(config *models.MCPConfig) error {
-	// Read the template file
-	templateData, err := os.ReadFile(c.options.TemplatePath)
-	if err != nil {
-		return fmt.Errorf("failed to read template file: %w", err)
-	}
-
-	// Parse the template
-	var templateConfig models.MCPConfigTemplate
-	err = yaml.Unmarshal(templateData, &templateConfig)
-	if err != nil {
-		return fmt.Errorf("failed to parse template: %w", err)
-	}
-
-	// Apply server config
-	if templateConfig.Server.Config != nil {
-		if config.Server.Config == nil {
-			config.Server.Config = make(map[string]interface{})
-		}
-		for k, v := range templateConfig.Server.Config {
-			config.Server.Config[k] = v
-		}
-	}
-
-	// Apply tool template to all tools
-	if templateConfig.Tools.RequestTemplate != nil || templateConfig.Tools.ResponseTemplate != nil {
-		for i := range config.Tools {
-			// Apply request template
-			if templateConfig.Tools.RequestTemplate != nil {
-				// Merge headers
-				if len(templateConfig.Tools.RequestTemplate.Headers) > 0 {
-					config.Tools[i].RequestTemplate.Headers = append(
-						config.Tools[i].RequestTemplate.Headers,
-						templateConfig.Tools.RequestTemplate.Headers...,
-					)
-				}
-
-				// Apply other request template fields
-				if templateConfig.Tools.RequestTemplate.Body != "" {
-					config.Tools[i].RequestTemplate.Body = templateConfig.Tools.RequestTemplate.Body
-				}
-				if templateConfig.Tools.RequestTemplate.ArgsToJsonBody {
-					config.Tools[i].RequestTemplate.ArgsToJsonBody = true
-				}
-				if templateConfig.Tools.RequestTemplate.ArgsToUrlParam {
-					config.Tools[i].RequestTemplate.ArgsToUrlParam = true
-				}
-				if templateConfig.Tools.RequestTemplate.ArgsToFormBody {
-					config.Tools[i].RequestTemplate.ArgsToFormBody = true
-				}
-			}
-
-			// Apply response template
-			if templateConfig.Tools.ResponseTemplate != nil {
-				if templateConfig.Tools.ResponseTemplate.Body != "" {
-					config.Tools[i].ResponseTemplate.Body = templateConfig.Tools.ResponseTemplate.Body
-				}
-				if templateConfig.Tools.ResponseTemplate.PrependBody != "" {
-					config.Tools[i].ResponseTemplate.PrependBody = templateConfig.Tools.ResponseTemplate.PrependBody
-				}
-				if templateConfig.Tools.ResponseTemplate.AppendBody != "" {
-					config.Tools[i].ResponseTemplate.AppendBody = templateConfig.Tools.ResponseTemplate.AppendBody
-				}
-			}
-		}
-	}
-
-	return nil
 }
 
 // getOperations returns a map of HTTP method to operation
@@ -417,13 +341,29 @@ func (c *Converter) createResponseTemplate(operation *openapi3.Operation) (*mode
 	// Create the response template
 	template := &models.ResponseTemplate{}
 
-	// Generate the prepend body with response schema descriptions
+	// 初始化一个字符串构建器用于生成响应模板内容
 	var prependBody strings.Builder
-	prependBody.WriteString("# API Response Information\n\n")
-	prependBody.WriteString("Below is the response from an API call. To help you understand the data, I've provided:\n\n")
-	prependBody.WriteString("1. A detailed description of all fields in the response structure\n")
-	prependBody.WriteString("2. The complete API response\n\n")
-	prependBody.WriteString("## Response Structure\n\n")
+
+	// 优先使用直接提供的响应模板内容
+	if c.options.ResponseTemplate != "" {
+		// 使用直接提供的模板文本
+		prependBody.WriteString(c.options.ResponseTemplate)
+		prependBody.WriteString("\n\n")
+	} else {
+		// 尝试从配置文件读取默认响应模板
+		defaultTemplatePath := filepath.Join(getExecutableDir(), defaultResponseTemplatePath)
+
+		templateContent, err := os.ReadFile(defaultTemplatePath)
+		if err == nil {
+			// 成功读取模板文件
+			prependBody.WriteString(string(templateContent))
+			prependBody.WriteString("\n\n")
+		} else {
+			// 读取模板文件失败，使用硬编码的默认模板
+			prependBody.WriteString("# API Response Information\n\n")
+			prependBody.WriteString("## Response Structure\n\n")
+		}
+	}
 
 	// Process each content type
 	for contentType, mediaType := range successResponse.Content {
@@ -579,4 +519,15 @@ func contains(slice []string, str string) bool {
 		}
 	}
 	return false
+}
+
+// getExecutableDir 返回可执行文件所在的目录
+func getExecutableDir() string {
+	// 获取当前的工作目录
+	execDir, err := os.Getwd()
+	if err != nil {
+		// 如果获取失败，回退到空字符串，将使用相对路径
+		return ""
+	}
+	return execDir
 }
