@@ -15,6 +15,9 @@ import (
 // defaultResponseTemplatePath 是默认响应模板的路径
 const defaultResponseTemplatePath = "conf/response_template.md"
 
+// maxPropertyRecursionDepth 是属性递归的最大深度
+const maxPropertyRecursionDepth = 10
+
 // Converter represents an OpenAPI to MCP converter
 type Converter struct {
 	parser  *parser.Parser
@@ -76,29 +79,22 @@ func (c *Converter) Convert() (*models.MCPConfig, error) {
 func getOperations(pathItem *openapi3.PathItem) map[string]*openapi3.Operation {
 	operations := make(map[string]*openapi3.Operation)
 
-	if pathItem.Get != nil {
-		operations["get"] = pathItem.Get
+	// 使用映射和循环结构简化HTTP方法的处理
+	methodMap := map[string]*openapi3.Operation{
+		"get":     pathItem.Get,
+		"post":    pathItem.Post,
+		"put":     pathItem.Put,
+		"delete":  pathItem.Delete,
+		"options": pathItem.Options,
+		"head":    pathItem.Head,
+		"patch":   pathItem.Patch,
+		"trace":   pathItem.Trace,
 	}
-	if pathItem.Post != nil {
-		operations["post"] = pathItem.Post
-	}
-	if pathItem.Put != nil {
-		operations["put"] = pathItem.Put
-	}
-	if pathItem.Delete != nil {
-		operations["delete"] = pathItem.Delete
-	}
-	if pathItem.Options != nil {
-		operations["options"] = pathItem.Options
-	}
-	if pathItem.Head != nil {
-		operations["head"] = pathItem.Head
-	}
-	if pathItem.Patch != nil {
-		operations["patch"] = pathItem.Patch
-	}
-	if pathItem.Trace != nil {
-		operations["trace"] = pathItem.Trace
+
+	for method, operation := range methodMap {
+		if operation != nil {
+			operations[method] = operation
+		}
 	}
 
 	return operations
@@ -155,6 +151,74 @@ func (c *Converter) convertOperation(path, method string, operation *openapi3.Op
 	return tool, nil
 }
 
+// convertSchemaToProperties 将OpenAPI schema转换为属性映射
+func (c *Converter) convertSchemaToProperties(schema *openapi3.Schema, depth int) (map[string]interface{}, error) {
+	if schema == nil || len(schema.Properties) == 0 {
+		return nil, nil
+	}
+
+	if depth > maxPropertyRecursionDepth {
+		return map[string]interface{}{"_note": "递归深度超过限制"}, nil
+	}
+
+	properties := make(map[string]interface{})
+	for propName, propRef := range schema.Properties {
+		if propRef == nil || propRef.Value == nil {
+			continue
+		}
+
+		propSchema := propRef.Value
+		propInfo := map[string]interface{}{
+			"type": propSchema.Type,
+		}
+
+		// 添加描述信息
+		if propSchema.Description != "" {
+			propInfo["description"] = propSchema.Description
+		}
+
+		// 处理枚举值
+		if len(propSchema.Enum) > 0 {
+			propInfo["enum"] = propSchema.Enum
+		}
+
+		// 处理数组类型
+		if propSchema.Type == "array" && propSchema.Items != nil && propSchema.Items.Value != nil {
+			itemsInfo := map[string]interface{}{
+				"type": propSchema.Items.Value.Type,
+			}
+
+			// 如果数组项是对象，递归处理其属性
+			if propSchema.Items.Value.Type == "object" && len(propSchema.Items.Value.Properties) > 0 {
+				nestedProps, err := c.convertSchemaToProperties(propSchema.Items.Value, depth+1)
+				if err != nil {
+					return nil, fmt.Errorf("处理数组项属性失败: %w", err)
+				}
+				if nestedProps != nil {
+					itemsInfo["properties"] = nestedProps
+				}
+			}
+
+			propInfo["items"] = itemsInfo
+		}
+
+		// 处理对象类型
+		if propSchema.Type == "object" && len(propSchema.Properties) > 0 {
+			nestedProps, err := c.convertSchemaToProperties(propSchema, depth+1)
+			if err != nil {
+				return nil, fmt.Errorf("处理嵌套属性失败: %w", err)
+			}
+			if nestedProps != nil {
+				propInfo["properties"] = nestedProps
+			}
+		}
+
+		properties[propName] = propInfo
+	}
+
+	return properties, nil
+}
+
 // convertParameters converts OpenAPI parameters to MCP arguments
 func (c *Converter) convertParameters(parameters openapi3.Parameters) ([]models.Arg, error) {
 	args := []models.Arg{}
@@ -193,16 +257,12 @@ func (c *Converter) convertParameters(parameters openapi3.Parameters) ([]models.
 
 			// Handle object type
 			if schema.Type == "object" && len(schema.Properties) > 0 {
-				arg.Properties = make(map[string]interface{})
-				for propName, propRef := range schema.Properties {
-					if propRef.Value != nil {
-						arg.Properties[propName] = map[string]interface{}{
-							"type": propRef.Value.Type,
-						}
-						if propRef.Value.Description != "" {
-							arg.Properties[propName].(map[string]interface{})["description"] = propRef.Value.Description
-						}
-					}
+				properties, err := c.convertSchemaToProperties(schema, 1)
+				if err != nil {
+					return nil, fmt.Errorf("转换参数属性失败: %w", err)
+				}
+				if properties != nil {
+					arg.Properties = properties
 				}
 			}
 		}
@@ -264,16 +324,12 @@ func (c *Converter) convertRequestBody(requestBodyRef *openapi3.RequestBodyRef) 
 
 					// Handle object type
 					if propRef.Value.Type == "object" && len(propRef.Value.Properties) > 0 {
-						arg.Properties = make(map[string]interface{})
-						for subPropName, subPropRef := range propRef.Value.Properties {
-							if subPropRef.Value != nil {
-								arg.Properties[subPropName] = map[string]interface{}{
-									"type": subPropRef.Value.Type,
-								}
-								if subPropRef.Value.Description != "" {
-									arg.Properties[subPropName].(map[string]interface{})["description"] = subPropRef.Value.Description
-								}
-							}
+						properties, err := c.convertSchemaToProperties(propRef.Value, 1)
+						if err != nil {
+							return nil, fmt.Errorf("转换请求体属性失败: %w", err)
+						}
+						if properties != nil {
+							arg.Properties = properties
 						}
 					}
 
@@ -379,7 +435,7 @@ func (c *Converter) createResponseTemplate(operation *openapi3.Operation) (*mode
 			// Handle array type
 			prependBody.WriteString(fmt.Sprintf("- **items**: Array of items (Type: array)\n"))
 			// Process array items recursively
-			c.processSchemaProperties(&prependBody, schema.Items.Value, "items", 1, 10)
+			c.processSchemaProperties(&prependBody, schema.Items.Value, "items", 1, maxPropertyRecursionDepth)
 		} else if schema.Type == "object" && len(schema.Properties) > 0 {
 			// Get property names and sort them alphabetically for consistent output
 			propNames := make([]string, 0, len(schema.Properties))
@@ -403,7 +459,7 @@ func (c *Converter) createResponseTemplate(operation *openapi3.Operation) (*mode
 				prependBody.WriteString("\n")
 
 				// Process nested properties recursively
-				c.processSchemaProperties(&prependBody, propRef.Value, propName, 1, 10)
+				c.processSchemaProperties(&prependBody, propRef.Value, propName, 1, maxPropertyRecursionDepth)
 			}
 		}
 	}
